@@ -22,6 +22,9 @@
 #include <bx/file.h>
 
 #include <string>
+#include <vector>
+#include "pystring.h"
+#include "pystring.cpp"
 
 #define BIMG_TEXTUREC_VERSION_MAJOR 1
 #define BIMG_TEXTUREC_VERSION_MINOR 18
@@ -1035,6 +1038,7 @@ int main(int _argc, const char* _argv[])
 		return bx::kExitSuccess;
     }
 
+	// adixon
 	const char* inputFileName = cmdLine.findOption('f');
 	if (NULL == inputFileName)
 	{
@@ -1178,38 +1182,72 @@ int main(int _argc, const char* _argv[])
 
 	const bool validate = cmdLine.hasArg("validate");
 
-	bx::Error err;
-	bx::FileReader reader;
-	if (!bx::open(&reader, inputFileName, &err) )
-	{
-		help("Failed to open input file.", err);
-		return bx::kExitFailure;
-	}
-
-	uint32_t inputSize = (uint32_t)bx::getSize(&reader);
-	if (0 == inputSize)
-	{
-		help("Failed to read input file.", err);
-		return bx::kExitFailure;
-	}
-
 	bx::DefaultAllocator defaultAllocator;
 	AlignedAllocator allocator(&defaultAllocator, 16);
 
-	uint8_t* inputData = (uint8_t*)BX_ALLOC(&allocator, inputSize);
+	bimg::ImageContainer* output = nullptr;
+	uint8_t* inputData = nullptr;
+	uint32_t inputSize = 0;
+	bx::FileReader reader;
+	bx::Error err;
 
-	bx::read(&reader, inputData, inputSize, &err);
-	bx::close(&reader);
+	std::vector<std::string> filenames;
+	pystring::split(inputFileName, filenames, ";");
 
-	if (!err.isOk() )
+	for(auto& file : filenames)
 	{
-		help("Failed to read input file.", err);
-		return bx::kExitFailure;
+		if (!bx::open(&reader, file.c_str(), &err))
+		{
+			help("Failed to open input file.", err);
+			return bx::kExitFailure;
+		}
+
+		uint32_t inputSize = (uint32_t)bx::getSize(&reader);
+		if (0 == inputSize)
+		{
+			help("Failed to read input file.", err);
+			return bx::kExitFailure;
+		}
+
+		uint8_t* inputData = (uint8_t*)BX_ALLOC(&allocator, inputSize);
+
+		bx::read(&reader, inputData, inputSize, &err);
+		bx::close(&reader);
+
+		if (!err.isOk())
+		{
+			help("Failed to read input file.", err);
+			return bx::kExitFailure;
+		}
+
+		bimg::ImageContainer* layerOutput = convert(&allocator, inputData, inputSize, options, &err);
+
+		if (!output)
+		{
+			output = layerOutput;
+			uint8_t* newData = (uint8_t*)malloc(output->m_size);
+			memcpy(newData, output->m_data, output->m_size);
+			output->m_data = newData;
+		}
+		else
+		{
+			// append images as array layers
+			size_t newSize = layerOutput->m_size + output->m_size;
+			uint8_t* newData = (uint8_t*)malloc(newSize);
+
+			memcpy(newData, output->m_data, output->m_size);
+			free(output->m_data);
+			output->m_data = newData;
+
+			newData += output->m_size;
+			memcpy(newData, layerOutput->m_data, layerOutput->m_size);
+
+			output->m_size = newSize;
+			output->m_numLayers++;
+		}
+
+		BX_FREE(&allocator, inputData);
 	}
-
-	bimg::ImageContainer* output = convert(&allocator, inputData, inputSize, options, &err);
-
-	BX_FREE(&allocator, inputData);
 
 	if (NULL != output)
 	{
@@ -1222,6 +1260,7 @@ int main(int _argc, const char* _argv[])
 			}
 			else if (!bx::strFindI(saveAs, "dds").isEmpty() )
 			{
+				// adixon
 				bimg::imageWriteDds(&writer, *output, output->m_data, output->m_size, &err);
 			}
 			else if (!bx::strFindI(saveAs, "png").isEmpty() )
