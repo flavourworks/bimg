@@ -1191,7 +1191,7 @@ int main(int _argc, const char* _argv[])
 	bx::Error err;
 
 	std::vector<std::string> filenames;
-	pystring::split(inputFileName, filenames, ";");
+	pystring::split(inputFileName, filenames, ",");
 
 	for(auto& file : filenames)
 	{

@@ -3256,6 +3256,7 @@ namespace bimg
 #define DDS_FORMAT_R16_FLOAT           54
 #define DDS_FORMAT_R16_UNORM           56
 #define DDS_FORMAT_R8_UNORM            61
+#define DDS_FORMAT_A8_UNORM            65
 #define DDS_FORMAT_R1_UNORM            66
 #define DDS_FORMAT_BC1_UNORM           71
 #define DDS_FORMAT_BC1_UNORM_SRGB      72
@@ -3391,6 +3392,7 @@ namespace bimg
 
 		{ DDS_FORMAT_R1_UNORM,            TextureFormat::R1,         false },
 		{ DDS_FORMAT_R8_UNORM,            TextureFormat::R8,         false },
+        { DDS_FORMAT_A8_UNORM,            TextureFormat::A8,         false },
 		{ DDS_FORMAT_R16_UNORM,           TextureFormat::R16,        false },
 		{ DDS_FORMAT_R16_FLOAT,           TextureFormat::R16F,       false },
 		{ DDS_FORMAT_R32_UINT,            TextureFormat::R32U,       false },
