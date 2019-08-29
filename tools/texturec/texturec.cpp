@@ -1191,10 +1191,47 @@ int main(int _argc, const char* _argv[])
 	bx::Error err;
 
 	std::vector<std::string> filenames;
-	pystring::split(inputFileName, filenames, ",");
+
+	if (pystring::endswith(inputFileName, ".txt"))
+	{
+		// load container
+		bx::FileReader containerReader;
+		if (!bx::open(&containerReader, inputFileName, &err))
+		{
+			help("Failed to open input text file.", err);
+			return bx::kExitFailure;
+		}
+
+		uint32_t containerSize = (uint32_t)bx::getSize(&containerReader);
+		if (0 == containerSize)
+		{
+			help("Failed to read text input file.", err);
+			return bx::kExitFailure;
+		}
+
+		uint8_t* containerData = (uint8_t*)BX_ALLOC(&allocator, containerSize+1);
+		bx::read(&containerReader, containerData, containerSize, &err);
+		bx::close(&containerReader);
+		containerData[containerSize] = '\0';
+
+		std::string containerString = (const char*)containerData;
+
+		containerString = pystring::replace(containerString, "\r", "");
+		pystring::split(containerString, filenames, "\n");
+
+		BX_FREE(&allocator, containerData);
+	}
+	else
+	{
+		// load single file
+		filenames.push_back(inputFileName);
+	}
 
 	for(auto& file : filenames)
 	{
+		if(file.empty())
+			continue;
+
 		if (!bx::open(&reader, file.c_str(), &err))
 		{
 			help("Failed to open input file.", err);
