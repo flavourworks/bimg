@@ -5363,7 +5363,7 @@ namespace bimg
 
 		uint32_t caps[4] =
 		{
-			uint32_t(DDSCAPS_TEXTURE | (1 < _numMips ? DDSCAPS_COMPLEX|DDSCAPS_MIPMAP : 0) ),
+			uint32_t(DDSCAPS_TEXTURE | (1 < _numMips || _cubeMap ? DDSCAPS_COMPLEX|DDSCAPS_MIPMAP : 0) ),
 			uint32_t(_cubeMap ? DDSCAPS2_CUBEMAP|DSCAPS2_CUBEMAP_ALLSIDES : 0),
 			0,
 			0,

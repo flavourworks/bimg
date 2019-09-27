@@ -48,6 +48,7 @@ struct Options
 			"\t equirect: %s\n"
 			"\t    strip: %s\n"
 			"\t   linear: %s\n"
+			"\t   cubearray: %s\n"
 			, maxSize
 			, mipSkip
 			, edge
@@ -60,7 +61,8 @@ struct Options
 			, radiance  ? "true" : "false"
 			, equirect  ? "true" : "false"
 			, strip     ? "true" : "false"
-			, linear    ? "true" : "false"
+			, linear    ? "true" : "false",
+			, cubearray ? "true" : "false",
 			);
 	}
 
@@ -922,6 +924,7 @@ void help(const char* _error = NULL, bool _showHelp = true)
 		  "    *.psd (input)          Photoshop Document.\n"
 		  "    *.pvr (input)          PowerVR.\n"
 		  "    *.tga (input)          Truevision TGA.\n"
+		  "    *.txt (input)          Containing list of filenames to pack into texture array or cubemap.\n"
 
 		  "\n"
 		  "Options:\n"
@@ -941,6 +944,7 @@ void help(const char* _error = NULL, bool _showHelp = true)
 		  "      --iqa                Image Quality Assessment\n"
 		  "      --pma                Premultiply alpha into RGB channel.\n"
 		  "      --linear             Input and output texture is linear color space (gamma correction won't be applied).\n"
+		  "      --cubearray          Input text file contains list of images to form a cubemap in order: +x, -x, +y, -y, +z, -z.\n"
 		  "      --max <max size>     Maximum width/height (image will be scaled down and\n"
 		  "                           aspect ratio will be preserved.\n"
 		  "      --radiance <model>   Radiance cubemap filter. (Lighting model: Phong, PhongBrdf, Blinn, BlinnBrdf, GGX)\n"
@@ -1258,6 +1262,9 @@ int main(int _argc, const char* _argv[])
 
 		bimg::ImageContainer* layerOutput = convert(&allocator, inputData, inputSize, options, &err);
 
+		if(cmdLine.hasArg("cubearray"))
+			layerOutput->m_cubeMap = true;
+
 		if (!output)
 		{
 			output = layerOutput;
@@ -1296,7 +1303,6 @@ int main(int _argc, const char* _argv[])
 			}
 			else if (!bx::strFindI(saveAs, "dds").isEmpty() )
 			{
-				// adixon
 				bimg::imageWriteDds(&writer, *output, output->m_data, output->m_size, &err);
 			}
 			else if (!bx::strFindI(saveAs, "png").isEmpty() )
