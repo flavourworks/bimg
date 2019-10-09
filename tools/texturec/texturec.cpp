@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include "pystring.h"
+#include <string.h> // for memcpy linux
 
 #define BIMG_TEXTUREC_VERSION_MAJOR 1
 #define BIMG_TEXTUREC_VERSION_MINOR 18
